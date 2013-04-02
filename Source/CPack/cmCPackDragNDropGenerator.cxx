@@ -311,8 +311,10 @@ int cmCPackDragNDropGenerator::CreateDMG(const std::string& src_dir,
     cmOStringStream package_background_source;
     package_background_source << cpack_dmg_background_image;
 
+    std::string background_file_ext = cpack_dmg_background_image.substr(cpack_dmg_background_image.find_last_of("."));
+
     cmOStringStream package_background_destination;
-    package_background_destination << staging.str() << "/background.png";
+    package_background_destination << staging.str() << "/background" + background_file_ext;
 
     if(!this->CopyFile(package_background_source,
         package_background_destination))
