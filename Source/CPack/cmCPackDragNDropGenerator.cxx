@@ -102,6 +102,17 @@ int cmCPackDragNDropGenerator::InitializeInternal()
     }
   this->SetOptionIfNotSet("CPACK_COMMAND_REZ", rez_path.c_str());
 
+  const std::string codesign_path = cmSystemTools::FindProgram("codesign",
+    std::vector<std::string>(), false);
+  if(codesign_path.empty())
+    {
+    cmCPackLogger(cmCPackLog::LOG_ERROR,
+      "Cannot locate codesign command"
+      << std::endl);
+    return 0;
+    }
+  this->SetOptionIfNotSet("CPACK_COMMAND_CODESIGN", codesign_path.c_str());
+
   return this->Superclass::InitializeInternal();
 }
 
@@ -245,6 +256,10 @@ int cmCPackDragNDropGenerator::CreateDMG(const std::string& src_dir,
     this->GetOption("CPACK_DMG_DS_STORE")
     ? this->GetOption("CPACK_DMG_DS_STORE") : "";
 
+  const std::string cpack_apple_codesign_cert_name =
+    this->GetOption("CPACK_APPLE_CODESIGN_CERT_NAME")
+    ? this->GetOption("CPACK_APPLE_CODESIGN_CERT_NAME") : "";
+
   // only put license on dmg if is user provided
   if(!cpack_license_file.empty() &&
       cpack_license_file.find("CPack.GenericLicense.txt") != std::string::npos)
@@ -324,6 +339,31 @@ int cmCPackDragNDropGenerator::CreateDMG(const std::string& src_dir,
 
       return 0;
       }
+
+    //Optionally codesign the application.
+    if(!cpack_apple_codesign_cert_name.empty())
+      {
+      cmOStringStream temp_codesign_cmd;
+      temp_codesign_cmd << this->GetOption("CPACK_COMMAND_CODESIGN");
+      temp_codesign_cmd << " -f -s \"Developer ID Application: ";
+      temp_codesign_cmd << this->GetOption("CPACK_APPLE_CODESIGN_CERT_NAME");
+      temp_codesign_cmd << "\" \"" << staging.str() << "/";
+      temp_codesign_cmd << this->GetOption("CPACK_BUNDLE_NAME");
+      temp_codesign_cmd << ".app\"";
+
+      if(!this->RunCommand(temp_codesign_cmd))
+        {
+        cmCPackLogger(cmCPackLog::LOG_ERROR,
+          "Error code signing the application package."
+          << std::endl);
+
+        return 0;
+        }
+
+      cmCPackLogger(cmCPackLog::LOG_OUTPUT,
+        "- Application has been codesigned."
+        << std::endl);
+    }
 
     cmOStringStream temp_background_hiding_command;
     temp_background_hiding_command << this->GetOption("CPACK_COMMAND_SETFILE");

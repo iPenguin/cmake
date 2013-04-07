@@ -35,6 +35,13 @@
 ##end
 #
 ##variable
+#  CPACK_APPLE_CODESIGN_CERT_NAME - The name from your Apple supplied code signing
+#  certificate. The name usually takes the form "Developer ID Application: [Name]" or
+#  "3rd Party Mac Developer Application: [Name]". If this variable is not set the
+#  application will not be signed.
+##end
+#
+##variable
 #  CPACK_COMMAND_HDIUTIL - Path to the hdiutil(1) command used to
 #  operate on disk image files on Mac OS X. This variable can be used
 #  to override the automatically detected command (or specify its
@@ -52,6 +59,13 @@
 ##variable
 #  CPACK_COMMAND_REZ - Path to the Rez(1) command used to compile
 #  resources on Mac OS X. This variable can be used to override the
+#  automatically detected command (or specify its location if the
+#  auto-detection fails to find it.)
+##end
+#
+##variable
+#  CPACK_COMMAND_CODESIGN - Path to the codesign(1) command used to sign
+#  applications with an Apple cert. This variable can be used to override the
 #  automatically detected command (or specify its location if the
 #  auto-detection fails to find it.)
 ##end
