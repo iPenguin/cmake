@@ -31,6 +31,7 @@ public:
 protected:
   virtual int InitializeInternal();
   virtual const char* GetPackagingInstallPrefix();
+  int ConstructAppBundle();
   int PackageFiles();
   bool SupportsComponentInstallation() const;
 

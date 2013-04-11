@@ -53,7 +53,7 @@ const char* cmCPackBundleGenerator::GetPackagingInstallPrefix()
 }
 
 //----------------------------------------------------------------------
-int cmCPackBundleGenerator::PackageFiles()
+int cmCPackBundleGenerator::ConstructAppBundle()
 {
 
   // Get required arguments ...
@@ -155,8 +155,8 @@ int cmCPackBundleGenerator::PackageFiles()
     if(!this->CopyFile(command_source, command_target))
       {
       cmCPackLogger(cmCPackLog::LOG_ERROR,
-                    "Error copying startup command. "
-                    " Check the value of CPACK_BUNDLE_STARTUP_COMMAND."
+        "Error copying startup command. "
+        " Check the value of CPACK_BUNDLE_STARTUP_COMMAND."
         << std::endl);
 
       return 0;
@@ -165,13 +165,26 @@ int cmCPackBundleGenerator::PackageFiles()
     cmSystemTools::SetPermissions(command_target.str().c_str(), 0777);
     }
 
+  return 1;
+}
+
+//----------------------------------------------------------------------
+int cmCPackBundleGenerator::PackageFiles()
+{
+  if(!this->ConstructAppBundle())
+    {
+    return 0;
+    }
+
   if(!this->SignPackage(toplevel))
-      return 0;
+    {
+    return 0;
+    }
 
   return this->CreateDMG(toplevel, packageFileNames[0]);
 }
 
 bool cmCPackBundleGenerator::SupportsComponentInstallation() const
 {
-  return false;
+    return false;
 }

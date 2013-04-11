@@ -13,13 +13,13 @@
 #ifndef cmCPackMacAppStoreGenerator_h
 #define cmCPackMacAppStoreGenerator_h
 
-#include "cmCPackDragNDropGenerator.h"
+#include "cmCPackBundleGenerator.h"
 
 /** \class cmCPackMacAppStoreGenerator
  * \brief A generator for Mac App Store packages
  *
  */
-class cmCPackMacAppStoreGenerator : public cmCPackDragNDropGenerator
+class cmCPackMacAppStoreGenerator : public cmCPackBundleGenerator
 {
 public:
   cmCPackTypeMacro(cmCPackMacAppStoreGenerator, cmCPackDragNDropGenerator);
@@ -29,10 +29,8 @@ public:
 
 protected:
   virtual int InitializeInternal();
-  virtual const char* GetPackagingInstallPrefix();
   virtual const char* GetOutputExtension();
   int PackageFiles();
-  bool SupportsComponentInstallation() const;
 
   int CreatePackage(const std::string& src_dir);
   std::string InstallPrefix;
