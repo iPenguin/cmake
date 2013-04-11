@@ -10,38 +10,31 @@
   See the License for more information.
 ============================================================================*/
 
-#ifndef cmCPackDragNDropGenerator_h
-#define cmCPackDragNDropGenerator_h
+#ifndef cmCPackMacAppStoreGenerator_h
+#define cmCPackMacAppStoreGenerator_h
 
-#include "cmCPackGenerator.h"
+#include "cmCPackDragNDropGenerator.h"
 
-/** \class cmCPackDragNDropGenerator
- * \brief A generator for OSX drag-n-drop installs
+/** \class cmCPackMacAppStoreGenerator
+ * \brief A generator for Mac App Store packages
+ *
  */
-class cmCPackDragNDropGenerator : public cmCPackGenerator
+class cmCPackMacAppStoreGenerator : public cmCPackDragNDropGenerator
 {
 public:
-  cmCPackTypeMacro(cmCPackDragNDropGenerator, cmCPackGenerator);
+  cmCPackTypeMacro(cmCPackMacAppStoreGenerator, cmCPackDragNDropGenerator);
 
-  cmCPackDragNDropGenerator();
-  virtual ~cmCPackDragNDropGenerator();
+  cmCPackMacAppStoreGenerator();
+  virtual ~cmCPackMacAppStoreGenerator();
 
 protected:
   virtual int InitializeInternal();
+  virtual const char* GetPackagingInstallPrefix();
   virtual const char* GetOutputExtension();
   int PackageFiles();
   bool SupportsComponentInstallation() const;
 
-
-  bool CopyFile(cmOStringStream& source, cmOStringStream& target);
-  bool RunCommand(cmOStringStream& command, std::string* output = 0);
-
-  std::string
-  GetComponentInstallDirNameSuffix(const std::string& componentName);
-
-  int SignPackage(const std::string& src_dir);
-  int CreateDMG(const std::string& src_dir, const std::string& output_file);
-
+  int CreatePackage(const std::string& src_dir);
   std::string InstallPrefix;
 };
 

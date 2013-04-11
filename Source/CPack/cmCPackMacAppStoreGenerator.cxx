@@ -10,40 +10,43 @@
   See the License for more information.
 ============================================================================*/
 
-#include "cmCPackBundleGenerator.h"
+#include "cmCPackMacAppStoreGenerator.h"
 #include "cmCPackLog.h"
 #include "cmSystemTools.h"
 
 #include <cmsys/RegularExpression.hxx>
 
 //----------------------------------------------------------------------
-cmCPackBundleGenerator::cmCPackBundleGenerator()
+cmCPackMacAppStoreGenerator::cmCPackMacAppStoreGenerator()
 {
 }
 
 //----------------------------------------------------------------------
-cmCPackBundleGenerator::~cmCPackBundleGenerator()
+cmCPackMacAppStoreGenerator::~cmCPackMacAppStoreGenerator()
 {
 }
 
 //----------------------------------------------------------------------
-int cmCPackBundleGenerator::InitializeInternal()
+int cmCPackMacAppStoreGenerator::InitializeInternal()
 {
-  const char* name = this->GetOption("CPACK_BUNDLE_NAME");
-  if(0 == name)
+
+  const std::string productbuild_path = cmSystemTools::FindProgram(
+    "productbuild", std::vector<std::string>(), false);
+  if(productbuild_path.empty())
     {
     cmCPackLogger(cmCPackLog::LOG_ERROR,
-      "CPACK_BUNDLE_NAME must be set to use the Bundle generator."
+      "Cannot locate productbuild command"
       << std::endl);
-
     return 0;
     }
+  this->SetOptionIfNotSet("CPACK_COMMAND_PRODUCTBUILD",
+    productbuild_path.c_str());
 
   return this->Superclass::InitializeInternal();
 }
 
 //----------------------------------------------------------------------
-const char* cmCPackBundleGenerator::GetPackagingInstallPrefix()
+const char* cmCPackMacAppStoreGenerator::GetPackagingInstallPrefix()
 {
   this->InstallPrefix = "/";
   this->InstallPrefix += this->GetOption("CPACK_BUNDLE_NAME");
@@ -52,8 +55,13 @@ const char* cmCPackBundleGenerator::GetPackagingInstallPrefix()
   return this->InstallPrefix.c_str();
 }
 
+const char* cmCPackMacAppStoreGenerator::GetOutputExtension()
+{
+    return ".pkg";
+}
+
 //----------------------------------------------------------------------
-int cmCPackBundleGenerator::PackageFiles()
+int cmCPackMacAppStoreGenerator::PackageFiles()
 {
 
   // Get required arguments ...
@@ -168,10 +176,51 @@ int cmCPackBundleGenerator::PackageFiles()
   if(!this->SignPackage(toplevel))
       return 0;
 
-  return this->CreateDMG(toplevel, packageFileNames[0]);
+  return this->CreatePackage(toplevel);
 }
 
-bool cmCPackBundleGenerator::SupportsComponentInstallation() const
+int cmCPackMacAppStoreGenerator::CreatePackage(const std::string &src_dir)
+{
+
+  const std::string cpack_apple_cert_installer =
+    this->GetOption("CPACK_APPLE_CERT_INSTALLER")
+    ? this->GetOption("CPACK_APPLE_CERT_INSTALLER") : "";
+
+  //Optionally codesign the application.
+  if(!cpack_apple_cert_installer.empty())
+    {
+    std::string bundle_path;
+    bundle_path = src_dir + "/";
+    bundle_path += this->GetOption("CPACK_BUNDLE_NAME");
+    bundle_path += ".app";
+
+    cmOStringStream temp_build_pkg;
+    temp_build_pkg << this->GetOption("CPACK_COMMAND_PRODUCTBUILD");
+    temp_build_pkg << " --component \"" << bundle_path;
+    temp_build_pkg << "\" /Applications --sign \"";
+    temp_build_pkg << this->GetOption("CPACK_APPLE_CERT_INSTALLER");
+    temp_build_pkg << "\" --product \"";
+    temp_build_pkg << bundle_path << "/Contents/Info.plist\" \"";
+    temp_build_pkg << this->GetOption("CPACK_TEMPORARY_PACKAGE_FILE_NAME");
+    temp_build_pkg << "\"";
+
+    if(!this->RunCommand(temp_build_pkg))
+      {
+      cmCPackLogger(cmCPackLog::LOG_ERROR,
+        "Error building package:"
+        << this->GetOption("CPACK_TOPLEVEL_DIRECTORY")
+        << "/" << this->GetOption("CPACK_BUNDLE_NAME")
+        << this->GetOutputExtension()
+        << std::endl);
+
+      return 0;
+      }
+    }
+
+    return 1;
+}
+
+bool cmCPackMacAppStoreGenerator::SupportsComponentInstallation() const
 {
   return false;
 }

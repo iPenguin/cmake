@@ -25,6 +25,7 @@
 #  include "cmCPackBundleGenerator.h"
 #  include "cmCPackPackageMakerGenerator.h"
 #  include "cmCPackOSXX11Generator.h"
+#  include "cmCPackMacAppStoreGenerator.h"
 #endif
 
 #ifdef __CYGWIN__
@@ -123,6 +124,11 @@ cmCPackGeneratorFactory::cmCPackGeneratorFactory()
     {
     this->RegisterGenerator("OSXX11", "Mac OSX X11 bundle",
       cmCPackOSXX11Generator::CreateGenerator);
+    }
+  if (cmCPackMacAppStoreGenerator::CanGenerate())
+    {
+      this->RegisterGenerator("MacAppStore", "Mac App Store package",
+      cmCPackMacAppStoreGenerator::CreateGenerator);
     }
 #endif
 #if !defined(_WIN32) \
